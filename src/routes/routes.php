@@ -2,7 +2,7 @@
 
 use Slim\Factory\AppFactory;
 use Slim\Interfaces\RouteCollectorProxyInterface as Group;
-use App\Src\Controller\User;
+
 
 require __DIR__ . '../../controllers/user.php';
 
