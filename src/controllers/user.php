@@ -14,6 +14,6 @@ class User
         $body = $request->getBody()->getContents();
         $response->getBody()->write($body);
         
-        return $response->withHeader("Content-Type", 'application/json')->withStatus(200);
+        return $response->withHeader("Content-Type", 'application/json')->withStatus(400);
     }
 }

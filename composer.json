@@ -72,7 +72,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Slim\\": "Slim"
+            "Slim\\": "Slim",
+            "MyApp\\": "src/"
         }
     },
     "autoload-dev": {
