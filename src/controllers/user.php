@@ -18,7 +18,6 @@ class User
             $firstName = $data["firstName"];
             $email = $data["email"];
             $pass = password_hash($data["pass"], PASSWORD_DEFAULT);
-
         }
 
         try {

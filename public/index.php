@@ -1,9 +1,9 @@
 <?php
 use MyApp\Handlers\HttpErrorHandler;
 use MyApp\Handlers\ShutdownHandler;
-use Slim\Exception\HttpInternalServerErrorException;
 use Slim\Factory\AppFactory;
 use Slim\Factory\ServerRequestCreatorFactory;
+
 
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -13,11 +13,10 @@ require __DIR__ . '/../src/connection/db.php';
 // Instantiate app
 $app = AppFactory::create();
 
-
 // Set that to your needs
 $displayErrorDetails = true;
 
-$app = AppFactory::create();
+
 $callableResolver = $app->getCallableResolver();
 $responseFactory = $app->getResponseFactory();
 
@@ -29,15 +28,20 @@ $shutdownHandler = new ShutdownHandler($request, $errorHandler, $displayErrorDet
 register_shutdown_function($shutdownHandler);
 
 
+
 // Add route callbacks
 require "../src/routes/routes.php";
+
 
 
 // Add Routing Middleware
 $app->addRoutingMiddleware();
 
+
+
 // Add Error Handling Middleware
 $errorMiddleware = $app->addErrorMiddleware($displayErrorDetails, false, false);
 $errorMiddleware->setDefaultErrorHandler($errorHandler);
+
 
 $app->run();
