@@ -28,7 +28,6 @@ $shutdownHandler = new ShutdownHandler($request, $errorHandler, $displayErrorDet
 register_shutdown_function($shutdownHandler);
 
 
-
 // Add route callbacks
 require "../src/routes/routes.php";
 

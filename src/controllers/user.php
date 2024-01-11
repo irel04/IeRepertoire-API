@@ -6,8 +6,24 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class User
 {
-    public static function handleRequest(Request $request, Response $response): Response
+    public static function register(Request $request, Response $response): Response
     {
+
+        $headers = $request->getHeaderLine('Content-type');
+
+        if (strpos($headers, 'application/json') === false) {
+            $message = array(
+                'message' => 'Invalid content-type',
+                'status' => 404
+            );
+
+            $payload = json_encode($message);
+
+            $response->getBody()->write($payload);
+
+            return $response->withStatus(404);
+        }
+
 
         $sql = "INSERT INTO user (last_name, first_name, email, pass) VALUES (:lastName, :firstName, :email, :pass)";
 
@@ -46,8 +62,33 @@ class User
             $response->getBody()->write(json_encode($error));
             return $response->withHeader("Content-Type", 'application/json')->withStatus(500);
         }
+    }
 
+    public static function login(Request $request, Response $response): Response
+    {
+        $headers = $request->getHeaderLine('Content-type');
 
-        
+        if (strpos($headers, 'application/json') === false) {
+            $message = array(
+                'message' => 'Invalid content-type',
+                'status' => 404
+            );
+
+            $payload = json_encode($message);
+
+            $response->getBody()->write($payload);
+
+            return $response->withStatus(404);
+        }
+
+        $sql = "SELECT * FROM user WHERE first_name = :fname, last_name: lname";
+
+        $data = $request->getParsedBody();
+
+        if ($data != null) {
+            $lastName = $data["lastName"];
+            $firstName = $data["firstName"];
+            $pass = password_hash($data["pass"], PASSWORD_DEFAULT);
+        }
     }
 }
