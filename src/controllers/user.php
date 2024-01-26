@@ -25,15 +25,22 @@ class User
         }
 
 
-        $sql = "INSERT INTO user (last_name, first_name, email, pass) VALUES (:lastName, :firstName, :email, :pass)";
+        $sql = "INSERT INTO user (user_id, last_name, first_name, birthday, address, contact_number, email) VALUES (:id, :lastName, :firstName, :birthday, :address, :contact, :email)";
 
         $data = $request->getParsedBody();
 
         if ($data != null) {
+            $user_id = $data['id'];
             $lastName = $data["lastName"];
             $firstName = $data["firstName"];
             $email = $data["email"];
-            $pass = password_hash($data["pass"], PASSWORD_DEFAULT);
+            $birthday = $data["birthday"];
+            $address = $data["address"];
+            $contact_number = $data["contactNumber"];
+
+            $birthday = $data["birthday"];
+            $dateObject = DateTime::createFromFormat('d-m-Y', $birthday);
+
         }
 
         try {
@@ -43,16 +50,20 @@ class User
 
             $stmt = $conn->prepare($sql);
 
+            $stmt->bindParam(":id", $user_id);
             $stmt->bindParam(":lastName", $lastName);
             $stmt->bindParam(":firstName", $firstName);
             $stmt->bindParam(":email", $email);
-            $stmt->bindParam(":pass", $pass);
+            $stmt->bindParam(":address", $address);
+            $stmt->bindParam(":birthday", $dateObject->format('Y-m-d'));
+            $stmt->bindParam(":contact", $contact_number);
+
+
 
 
             $stmt->execute();
 
             $db = null;
-
             return $response->withHeader("Content-Type", 'application/json')->withStatus(200);
         } catch (PDOException $err) {
             $error = array(
@@ -60,7 +71,7 @@ class User
             );
 
             $response->getBody()->write(json_encode($error));
-            return $response->withHeader("Content-Type", 'application/json')->withStatus(500);
+            return $response->withStatus(500);
         }
     }
 
@@ -81,14 +92,46 @@ class User
             return $response->withStatus(404);
         }
 
-        $sql = "SELECT * FROM user WHERE first_name = :fname, last_name: lname";
+        $sql = "SELECT * FROM user WHERE first_name = :fname AND last_name = :lname";
 
         $data = $request->getParsedBody();
 
         if ($data != null) {
             $lastName = $data["lastName"];
             $firstName = $data["firstName"];
-            $pass = password_hash($data["pass"], PASSWORD_DEFAULT);
+            $pass = $data['pass'];
+        }
+
+        try {
+            
+            $db = new DB();
+            $conn = $db->connect();
+
+            $stmt = $conn->prepare($sql);
+
+            $stmt->bindParam(":fname", $firstName);
+            $stmt->bindParam(":lname", $lastName);
+
+            $stmt->execute();
+
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+
+            $data = json_encode($data);
+
+            $response->getBody()->write($data);
+
+            return $response->withHeader("Content-Type", 'application/json')->withStatus(200);
+
+
+        } catch (PDOException $err) {
+            $error = array(
+                "message" => $err->getMessage()
+            );
+
+            $response->getBody()->write(json_encode($error));
+            return $response->withStatus(500);
         }
     }
 }

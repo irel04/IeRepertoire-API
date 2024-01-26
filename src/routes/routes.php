@@ -22,7 +22,7 @@ $app->group('/api/user', function(Group $group){
     
     $group->post('/register', [User::class, 'register']);
 
-    // $group->post('/login');
+    $group->post('/login', [User:: class, 'login']);
 
     // Allow preflight requests
     $group->options('', function (Request $request, Response $response): Response {
