@@ -26,27 +26,34 @@ class User
 
 
         $sql = "INSERT INTO user (user_id, last_name, first_name, birthday, address, contact_number, email) VALUES (:id, :lastName, :firstName, :birthday, :address, :contact, :email)";
+        $insert_credentials = "INSERT INTO login_credentials(user_id, user_name, password, role) VALUES (:user_id, :user_name, :password, :role)";
 
         $data = $request->getParsedBody();
 
         if ($data != null) {
-            $user_id = $data['id'];
-            $lastName = $data["lastName"];
-            $firstName = $data["firstName"];
+            $user_id = $data['user_id'];
+            $lastName = $data["last_name"];
+            $firstName = $data["first_name"];
             $email = $data["email"];
             $birthday = $data["birthday"];
             $address = $data["address"];
-            $contact_number = $data["contactNumber"];
+            $contact_number = $data["contact_number"];
+            $dateObject = DateTime::createFromFormat('Y-m-d', $birthday);
+            $bdayFormat = $dateObject->format('Y-m-d');
 
-            $birthday = $data["birthday"];
-            $dateObject = DateTime::createFromFormat('d-m-Y', $birthday);
-
+            //credentials for logging in account
+            $user_name = $data["user_name"];
+            $password = $data["password"];
+            $hash_password = hash("sha256", $password);
+            $role = $data['role'];
         }
 
         try {
 
             $db = new DB();
             $conn = $db->connect();
+
+            $conn->beginTransaction();
 
             $stmt = $conn->prepare($sql);
 
@@ -55,15 +62,28 @@ class User
             $stmt->bindParam(":firstName", $firstName);
             $stmt->bindParam(":email", $email);
             $stmt->bindParam(":address", $address);
-            $stmt->bindParam(":birthday", $dateObject->format('Y-m-d'));
+            $stmt->bindParam(":birthday", $bdayFormat);
             $stmt->bindParam(":contact", $contact_number);
-
-
 
 
             $stmt->execute();
 
+            // insert username and password
+            $user_id = $conn->lastInsertId();
+            $stmt = $conn->prepare($insert_credentials);
+
+            $stmt->bindParam(":user_id", $user_id);
+            $stmt->bindParam(":user_name", $user_name);
+            $stmt->bindParam(":password", $hash_password);
+            $stmt->bindParam(":role", $role);
+
+            $stmt->execute();
+
+            $conn->commit();
             $db = null;
+
+            $response->getBody()->write(json_encode(["success" => true]));
+
             return $response->withHeader("Content-Type", 'application/json')->withStatus(200);
         } catch (PDOException $err) {
             $error = array(
@@ -92,39 +112,45 @@ class User
             return $response->withStatus(404);
         }
 
-        $sql = "SELECT * FROM user WHERE first_name = :fname AND last_name = :lname";
+        $sql = "SELECT password FROM login_credentials WHERE user_name = :user_name";
 
         $data = $request->getParsedBody();
 
         if ($data != null) {
-            $lastName = $data["lastName"];
-            $firstName = $data["firstName"];
-            $pass = $data['pass'];
+            $user_name = $data["user_name"];
+            $password = $data["password"];
         }
 
         try {
-            
+
             $db = new DB();
             $conn = $db->connect();
+            $conn->beginTransaction();
 
             $stmt = $conn->prepare($sql);
 
-            $stmt->bindParam(":fname", $firstName);
-            $stmt->bindParam(":lname", $lastName);
+            $stmt->bindParam(":user_name", $user_name);
 
             $stmt->execute();
 
-            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            $conn->commit();
+
+            $result_password = $result['password'];
+
+            $verified = hash_equals(hash("sha256", $password), $result_password);
 
 
 
-            $data = json_encode($data);
+            if ($verified ===  true) {
+                $response->getBody()->write(json_encode(["message" => "login success"]));
+                return $response->withHeader("Content-Type", 'application/json')->withStatus(200);
+            } else {
 
-            $response->getBody()->write($data);
-
-            return $response->withHeader("Content-Type", 'application/json')->withStatus(200);
-
-
+                $response->getBody()->write(json_encode(["message" => "login failed"]));
+                return $response->withHeader("Content-Type", 'application/json')->withStatus(401);
+            }
         } catch (PDOException $err) {
             $error = array(
                 "message" => $err->getMessage()

@@ -1,0 +1,14 @@
+[
+    {
+        "user_id" : "2021-05817-MN-0",
+        "first_name" : "Irel",
+        "last_name" : "Kian",
+        "email" : "kianirel56@gmail.com",
+        "birthday" : "2003-04-05",
+        "address" : "Sta Rosa Laguna",
+        "contact_number" : "0932789335",
+        "user_name": "irel04",
+        "password": "MAHALKITA123",
+        "role" : "admin"
+    }
+]
