@@ -10,5 +10,9 @@
         "user_name": "irel04",
         "password": "MAHALKITA123",
         "role" : "admin"
+    },
+    {
+        "user_name": "irel04",
+        "password" : "MAHALKITA123"
     }
 ]

@@ -3,6 +3,7 @@
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Middleware\AuthenticationMiddleware;
 
 class User
 {
@@ -44,7 +45,7 @@ class User
             //credentials for logging in account
             $user_name = $data["user_name"];
             $password = $data["password"];
-            $hash_password = hash("sha256", $password);
+            $hash_password = password_hash($password, PASSWORD_DEFAULT);
             $role = $data['role'];
         }
 
@@ -69,7 +70,6 @@ class User
             $stmt->execute();
 
             // insert username and password
-            $user_id = $conn->lastInsertId();
             $stmt = $conn->prepare($insert_credentials);
 
             $stmt->bindParam(":user_id", $user_id);
@@ -139,12 +139,11 @@ class User
 
             $result_password = $result['password'];
 
-            $verified = hash_equals(hash("sha256", $password), $result_password);
-
-
+            $verified = password_verify($password, $result_password);
+            $token = AuthenticationMiddleware::generateToken();
 
             if ($verified ===  true) {
-                $response->getBody()->write(json_encode(["message" => "login success"]));
+                $response->getBody()->write(json_encode(["message" => "login success", "token" => $token]));
                 return $response->withHeader("Content-Type", 'application/json')->withStatus(200);
             } else {
 
