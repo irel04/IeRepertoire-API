@@ -8,6 +8,7 @@ use Slim\Middleware\CorsMiddleware;
 
 
 require __DIR__ . '../../controllers/user.php';
+require __DIR__ . '../../controllers/books.php';
 
 
 $app = AppFactory::create();
@@ -30,4 +31,13 @@ $app->group('/api/user', function(Group $group){
     });
 });
 
+$app->group('/api/library', function(Group $group){
+    
+    $group->get('/books', [Library::class, 'books']);
+    
+    // Allow preflight requests
+    $group->options('', function (Request $request, Response $response): Response {
+        return $response;
+    });
+});
 

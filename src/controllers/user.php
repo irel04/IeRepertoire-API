@@ -25,7 +25,6 @@ class User
             return $response->withStatus(404);
         }
 
-
         $sql = "INSERT INTO user (user_id, last_name, first_name, birthday, address, contact_number, email) VALUES (:id, :lastName, :firstName, :birthday, :address, :contact, :email)";
         $insert_credentials = "INSERT INTO login_credentials(user_id, user_name, password, role) VALUES (:user_id, :user_name, :password, :role)";
 
@@ -55,6 +54,7 @@ class User
             $conn = $db->connect();
 
             $conn->beginTransaction();
+
 
             $stmt = $conn->prepare($sql);
 
