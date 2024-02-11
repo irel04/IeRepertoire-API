@@ -19,25 +19,25 @@ $app->add($handleCORS);
 
 
 // This the route for user related endpoints
-$app->group('/api/user', function(Group $group){
-    
+$app->group('/api/user', function (Group $group) {
+
     $group->post('/register', [User::class, 'register']);
 
-    $group->post('/login', [User:: class, 'login']);
+    $group->post('/login', [User::class, 'login']);
 
     // Allow preflight requests
-    $group->options('', function (Request $request, Response $response): Response {
+    $group->options('/{routes:.*}', function (Request $request, Response $response): Response {
         return $response;
     });
 });
 
-$app->group('/api/library', function(Group $group){
-    
+$app->group('/api/library', function (Group $group) {
+
     $group->get('/books', [Library::class, 'books']);
-    
+    $group->get('/books/preview', [Library::class, 'books_preview']);
+
     // Allow preflight requests
-    $group->options('', function (Request $request, Response $response): Response {
+    $group->options('/{routes:.*}', function (Request $request, Response $response): Response {
         return $response;
     });
 });
-

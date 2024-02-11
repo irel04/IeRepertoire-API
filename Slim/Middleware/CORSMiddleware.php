@@ -22,7 +22,7 @@ class CorsMiddleware
         $response = $response->withHeader('Access-Control-Allow-Headers', $requestHeaders);
 
         // Optional: Allow Ajax CORS requests with Authorization header
-        // $response = $response->withHeader('Access-Control-Allow-Credentials', 'true');
+        $response = $response->withHeader('Access-Control-Allow-Credentials', 'true');
 
         return $response;
     }

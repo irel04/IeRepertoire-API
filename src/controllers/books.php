@@ -18,7 +18,6 @@ class Library
             $sql = 'SELECT * FROM books';
 
             try {
-
                 $db = new DB();
                 $conn = $db->connect();
 
@@ -26,9 +25,15 @@ class Library
                 $stmt = $conn->prepare($sql);
                 $stmt->execute();
 
-                $book_result = $stmt->fetch(PDO::FETCH_ASSOC);
+                $book_results = array();
+                while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                    $book_results[] = $row;
+                }
 
-                $response->getBody()->write(json_encode($book_result));
+
+                $response->getBody()->write(json_encode($book_results));
+
+                return $response->withStatus(200);
             } catch (PDOException $err) {
                 $error = array(
                     "message" => $err->getMessage()
@@ -37,9 +42,41 @@ class Library
                 $response->getBody()->write(json_encode($error));
                 return $response->withStatus(500);
             }
+        } else {
+            $response->getBody()->write(json_encode(["message" => 'Invalid Token']));
+            return $response->withStatus(200);
+        }
+    }
 
+    public static function books_preview(Request $request, Response $response): Response
+    {
+        $sql = 'SELECT * FROM books LIMIT 8';
+
+        try {
+
+            $db = new DB();
+            $conn = $db->connect();
+
+            $conn->beginTransaction();
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+
+            $book_results = array();
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $book_results[] = $row;
+            }
+
+
+            $response->getBody()->write(json_encode($book_results));
 
             return $response->withStatus(200);
+        } catch (PDOException $err) {
+            $error = array(
+                "message" => $err->getMessage()
+            );
+
+            $response->getBody()->write(json_encode($error));
+            return $response->withStatus(500);
         }
     }
 }
