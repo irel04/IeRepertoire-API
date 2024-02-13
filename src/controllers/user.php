@@ -204,8 +204,6 @@ class User
 
             $response->getBody()->write(json_encode($result));
             return $response->withStatus(200);
-
-            
         } catch (PDOException $err) {
             $error = array(
                 "message" => $err->getMessage()
@@ -216,7 +214,7 @@ class User
         }
     }
 
-    
+
 
     public static function addToLibrary(Request $request, Response $response): Response
     {
@@ -236,6 +234,62 @@ class User
         }
 
         $sql = 'INSERT INTO user_library(user_id, book_id) VALUES (:user_id, :book_id)';
+        $data = $request->getParsedBody();
+
+        if ($data != null) {
+            $user_id = $data['user_id'];
+            $book_id = $data['book_id'];
+        }
+
+        try {
+
+
+            $db = new DB();
+            $conn = $db->connect();
+            $conn->beginTransaction();
+
+
+            $stmt = $conn->prepare($sql);
+
+            $stmt->bindParam(":user_id", $user_id);
+            $stmt->bindParam(":book_id", $book_id);
+
+            $stmt->execute();
+            $conn->commit();
+            $db = null;
+
+            $response->getBody()->write(json_encode(["success" => true]));
+
+            return $response->withHeader("Content-Type", 'application/json')->withStatus(200);
+        } catch (PDOException $err) {
+            //throw $th;
+            $error = array(
+                "message" => $err->getMessage()
+            );
+
+            $response->getBody()->write(json_encode($error));
+            return $response->withStatus(500);
+        }
+    }
+
+    public static function removeToLibrary(Request $request, Response $response): Response
+    {
+        $headers = $request->getHeaderLine('Content-type');
+
+        if (strpos($headers, 'application/json') === false) {
+            $message = array(
+                'message' => 'Invalid content-type',
+                'status' => 404
+            );
+
+            $payload = json_encode($message);
+
+            $response->getBody()->write($payload);
+
+            return $response->withStatus(404);
+        }
+
+        $sql = 'DELETE FROM user_library WHERE user_id = :user_id AND book_id = :book_id';
         $data = $request->getParsedBody();
 
         if ($data != null) {

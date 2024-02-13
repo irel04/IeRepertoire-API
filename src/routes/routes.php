@@ -25,10 +25,12 @@ $app->group('/api/user', function (Group $group) {
     $group->post('/login', [User::class, 'login']);
     $group->post('/profile', [User::class, 'showProfile']);
     $group->post('/library', [User::class, 'addToLibrary']);
+    $group->delete('/library', [User::class, 'removeToLibrary']);
+
     $group->post('/library/myList', [User::class, 'loadLibrary']);
 
 
-    
+
     // Allow preflight requests
     $group->options('/{routes:.*}', function (Request $request, Response $response): Response {
         return $response;
