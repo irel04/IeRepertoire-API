@@ -11,13 +11,56 @@ class Library
 
         $headers = $request->getHeaderLine('Authorization');
 
-        if ($headers === "") {
-            $response->getBody()->write(json_encode(["message" => 'Invalid Token']));
-            return $response->withStatus(401);
-        } elseif (AuthenticationMiddleware::validateToken($headers)) {
-            $sql = 'SELECT * FROM books';
+        // if ($headers === "") {
+        //     $response->getBody()->write(json_encode(["message" => 'Invalid Token']));
+        //     return $response->withStatus(401);
+        // } elseif (AuthenticationMiddleware::validateToken($headers)) {
 
-            try {
+        // } else {
+        //     $response->getBody()->write(json_encode(["message" => 'Invalid Token']));
+        //     return $response->withStatus(200);
+        // }
+
+        $sql = 'SELECT * FROM books';
+
+        try {
+            $db = new DB();
+            $conn = $db->connect();
+
+            $conn->beginTransaction();
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+
+            $dn = null;
+            $book_results = array();
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $book_results[] = $row;
+            }
+
+
+            $response->getBody()->write(json_encode($book_results));
+
+            return $response->withStatus(200);
+        } catch (PDOException $err) {
+            $error = array(
+                "message" => $err->getMessage()
+            );
+
+            $response->getBody()->write(json_encode($error));
+            return $response->withStatus(500);
+        }
+    }
+
+    public static function books_preview(Request $request, Response $response): Response
+    {
+        $sql = 'SELECT * FROM books LIMIT 8';
+
+
+        $authorization = $request->getHeaderLine('Authorization');
+
+        try {
+
+            if (AuthenticationMiddleware::validateToken($authorization)) {
                 $db = new DB();
                 $conn = $db->connect();
 
@@ -30,46 +73,93 @@ class Library
                     $book_results[] = $row;
                 }
 
-
                 $response->getBody()->write(json_encode($book_results));
-
                 return $response->withStatus(200);
-            } catch (PDOException $err) {
+            } else {
                 $error = array(
-                    "message" => $err->getMessage()
+                    "message" => 'Unauthorized Connection'
                 );
-
                 $response->getBody()->write(json_encode($error));
-                return $response->withStatus(500);
+                return $response->withStatus(401);
             }
-        } else {
-            $response->getBody()->write(json_encode(["message" => 'Invalid Token']));
-            return $response->withStatus(200);
+        } catch (PDOException $err) {
+            $error = array(
+                "message" => $err->getMessage()
+            );
+
+            $response->getBody()->write(json_encode($error));
+            return $response->withStatus(500);
         }
     }
 
-    public static function books_preview(Request $request, Response $response): Response
+    public static function popular_categories(Request $request, Response $response): Response
     {
-        $sql = 'SELECT * FROM books LIMIT 8';
+        $sql = 'SELECT * FROM books WHERE category IN ("Operating System", "Programming", "Electronic Circuit Design", "Data Communication and Networks") ORDER BY RAND() LIMIT 20';
+
+        $authorization = $request->getHeaderLine('Authorization');
 
         try {
 
-            $db = new DB();
-            $conn = $db->connect();
 
-            $conn->beginTransaction();
-            $stmt = $conn->prepare($sql);
-            $stmt->execute();
+            if (AuthenticationMiddleware::validateToken($authorization)) {
+                $db = new DB();
+                $conn = $db->connect();
 
-            $book_results = array();
-            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $book_results[] = $row;
+                $conn->beginTransaction();
+                $stmt = $conn->prepare($sql);
+                $stmt->execute();
+
+                $book_results = array();
+                while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                    $book_results[] = $row;
+                }
+                $response->getBody()->write(json_encode($book_results));
+                return $response->withStatus(200);
+            } else {
+                $invalid = array('message' => 'invalid');
+                $response->getBody()->write(json_encode($invalid));
+                return $response->withStatus(401);
             }
+        } catch (PDOException $err) {
+            $error = array(
+                "message" => $err->getMessage()
+            );
+
+            $response->getBody()->write(json_encode($error));
+            return $response->withStatus(500);
+        }
+    }
+
+    public static function discover(Request $request, Response $response): Response
+    {
+        $sql = 'SELECT * FROM books WHERE category IN ("Operating System", "Programming", "Electronic Circuit Design", "Data Communication and Networks") ORDER BY RAND() LIMIT 20';
+
+        $authorization = $request->getHeaderLine('Authorization');
 
 
-            $response->getBody()->write(json_encode($book_results));
+        try {
 
-            return $response->withStatus(200);
+            if (AuthenticationMiddleware::validateToken($authorization)) {
+                $db = new DB();
+                $conn = $db->connect();
+
+                $conn->beginTransaction();
+                $stmt = $conn->prepare($sql);
+                $stmt->execute();
+
+                $book_results = array();
+                while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                    $book_results[] = $row;
+                }
+
+                $response->getBody()->write(json_encode($book_results));
+                return $response->withStatus(200);
+            } else {
+                $invalid = array('message' => 'invalid');
+                $response->getBody()->write(json_encode($invalid));
+                return $response->withStatus(401);
+            }
+            
         } catch (PDOException $err) {
             $error = array(
                 "message" => $err->getMessage()
