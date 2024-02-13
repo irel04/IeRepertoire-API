@@ -244,6 +244,8 @@ class User
         }
 
         try {
+
+
             $db = new DB();
             $conn = $db->connect();
             $conn->beginTransaction();
